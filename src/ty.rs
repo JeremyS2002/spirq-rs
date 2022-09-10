@@ -105,29 +105,32 @@ impl Default for MatrixAxisOrder {
 pub struct MatrixType {
     pub vec_ty: VectorType,
     pub nvec: u32,
-    pub stride: usize,
-    pub major: MatrixAxisOrder,
+    pub stride: Option<usize>,
+    pub major: Option<MatrixAxisOrder>,
 }
 impl MatrixType {
     pub fn new(vec_ty: VectorType, nvec: u32) -> MatrixType {
         MatrixType {
-            stride: vec_ty.nbyte(),
+            stride: Some(vec_ty.nbyte()),
             vec_ty: vec_ty,
             nvec: nvec,
-            major: MatrixAxisOrder::default(),
+            major: Some(MatrixAxisOrder::default()),
         }
     }
-    pub(crate) fn decorate(&mut self, stride: usize, major: MatrixAxisOrder) {
+    pub(crate) fn decorate(&mut self, stride: Option<usize>, major: Option<MatrixAxisOrder>) {
         self.stride = stride;
         self.major = major;
     }
-    pub fn nbyte(&self) -> usize { self.nvec as usize * self.stride }
+    pub fn nbyte(&self) -> usize { self.nvec as usize * self.vec_ty.nbyte() }
 }
 impl fmt::Debug for MatrixType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let transpose = match self.major {
-            MatrixAxisOrder::ColumnMajor => "",
-            MatrixAxisOrder::RowMajor => "T",
+            Some(order) => match order {
+                MatrixAxisOrder::ColumnMajor => "",
+                MatrixAxisOrder::RowMajor => "T",
+            },
+            None => "",
         };
         let nrow = self.vec_ty.nscalar;
         let ncol = self.nvec;

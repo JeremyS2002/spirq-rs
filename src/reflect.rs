@@ -1041,14 +1041,14 @@ impl<'a> ReflectIntermediate<'a> {
                     if let Type::Matrix(ref mut mat_ty) = proto_ty {
                         let mat_stride = self
                             .get_member_deco_u32(op.ty_id, i, Decoration::MatrixStride)
-                            .map(|x| x as usize)
-                            .ok_or(Error::MISSING_DECO)?;
+                            .map(|x| x as usize);
                         let row_major = self.contains_deco(op.ty_id, Some(i), Decoration::RowMajor);
                         let col_major = self.contains_deco(op.ty_id, Some(i), Decoration::ColMajor);
                         let major = match (row_major, col_major) {
-                            (true, false) => MatrixAxisOrder::RowMajor,
-                            (false, true) => MatrixAxisOrder::ColumnMajor,
-                            _ => return Err(Error::UNENCODED_ENUM),
+                            (true, false) => Some(MatrixAxisOrder::RowMajor),
+                            (false, true) => Some(MatrixAxisOrder::ColumnMajor),
+                            (false, false) => None,
+                            (true, true) => return Err(Error::UNENCODED_ENUM),
                         };
                         mat_ty.decorate(mat_stride, major);
                     }
